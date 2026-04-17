@@ -25,7 +25,25 @@ def add_attendee_connection():
 
 
 def view_rooms():
-    print("Option 6 not built yet.")
+    global rooms_cache
+
+    if rooms_cache is None:
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT roomID, roomName, capacity FROM room")
+            rooms_cache = cursor.fetchall()
+            conn.close()
+        except Exception as e:
+            print("Error loading rooms:", e)
+            return
+
+    print("\n--- Rooms ---")
+    for room in rooms_cache:
+        print(f"Room ID: {room[0]}")
+        print(f"Room Name: {room[1]}")
+        print(f"Capacity: {room[2]}")
+        print("-------------------")
 
 
 def main():
