@@ -5,7 +5,37 @@ rooms_cache = None
 
 
 def view_speakers_sessions():
-    print("Option 1 not built yet.")
+    speaker_search = input("Enter speaker name (or part of name): ").strip()
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        query = """
+        SELECT s.speakerName, s.sessionTitle, r.roomName
+        FROM session s
+        JOIN room r ON s.roomID = r.roomID
+        WHERE s.speakerName LIKE %s
+        ORDER BY s.speakerName, s.sessionTitle
+        """
+
+        cursor.execute(query, ("%" + speaker_search + "%",))
+        results = cursor.fetchall()
+
+        if results:
+            print("\n--- Matching Speakers & Sessions ---")
+            for row in results:
+                print(f"Speaker: {row[0]}")
+                print(f"Session: {row[1]}")
+                print(f"Room: {row[2]}")
+                print("-------------------")
+        else:
+            print("No speakers match search string")
+
+        conn.close()
+
+    except Exception as e:
+        print("Error loading speaker sessions:", e)
 
 
 def view_attendees_by_company():
