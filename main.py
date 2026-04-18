@@ -3,13 +3,17 @@ from db_neo4j import get_neo4j_driver
 
 rooms_cache = None
 
-
+# options 1 - prompts user for speaker name (or part of name) and lists matching speakers, their sessions, and room details. Uses SQL query to search for speakers and join with room details.
 def view_speakers_sessions():
     speaker_search = input("Enter speaker name (or part of name): ").strip()
 
     try:
         conn = get_connection()
         cursor = conn.cursor()
+        
+# This sql query joins the session and room tables to get the speaker name, session title, and room name for sessions 
+# where the speaker name matches the search string. 
+# The results are ordered by speaker name and session title.
 
         query = """
         SELECT s.speakerName, s.sessionTitle, r.roomName
@@ -37,23 +41,92 @@ def view_speakers_sessions():
     except Exception as e:
         print("Error loading speaker sessions:", e)
 
-
+# option 2 - groups attendees by company and lists them.
 def view_attendees_by_company():
-    print("Option 2 not built yet.")
+    while True:
+        company_input = input("Enter Company ID: ").strip()
 
+        try:
+            company_id = int(company_input)
+            if company_id <= 0:
+                print("Invalid company ID")
+                continue
+        except ValueError:
+            print("Invalid company ID")
+            continue
 
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+# This sql query selects the company name from the company table where the company ID matches the user input.
+            cursor.execute(
+                "SELECT companyName FROM company WHERE companyID = %s",
+                (company_id,)
+            )
+            company = cursor.fetchone()
+
+            if company is None:# If the company ID does not exist in the database, print a message and return to the main menu.
+                print("Company does not exist")
+                conn.close()
+                continue
+
+            print(f"\nCompany: {company[0]}")
+            
+# This sql query joins the attendee, registration, session, and room tables to get the attendee name, DOB, session title, speaker name, and room name for attendees who are registered for sessions and belong to the specified company. 
+# The results are ordered by attendee
+            query = """
+            SELECT 
+                a.attendeeName,
+                a.attendeeDOB,
+                s.sessionTitle,
+                s.speakerName,
+                r.roomName
+            FROM attendee a
+            JOIN registration reg ON a.attendeeID = reg.attendeeID
+            JOIN session s ON reg.sessionID = s.sessionID
+            JOIN room r ON s.roomID = r.roomID
+            WHERE a.attendeeCompanyID = %s
+            ORDER BY a.attendeeName, s.sessionTitle
+            """
+
+            cursor.execute(query, (company_id,))
+            results = cursor.fetchall()# If there are no attendees for the specified company, print a message and return to the main menu. Otherwise, print the attendee details and their sessions.
+
+            if not results:
+                print("No attendees for this company")
+                conn.close()
+                break
+
+            print("\n--- Attendees and Sessions ---")
+            for row in results:
+                print(f"Attendee: {row[0]}")
+                print(f"DOB: {row[1]}")
+                print(f"Session: {row[2]}")
+                print(f"Speaker: {row[3]}")
+                print(f"Room: {row[4]}")
+                print("-------------------")
+
+            conn.close()
+            break
+
+        except Exception as e:
+            print("Error loading attendees by company:", e)
+            break
+
+# option 3 - prompts user for attendee details and adds them to the database.
 def add_new_attendee():
     print("Option 3 not built yet.")
 
-
+# option 4 - lists attendees connected to the user (based on connections in Neo4j).
 def view_connected_attendees():
     print("Option 4 not built yet.")
 
-
+# option 5 - prompts user to enter the name of an attendee to connect with, then creates a connection in Neo4j.
 def add_attendee_connection():
     print("Option 5 not built yet.")
 
-
+# option 6 - lists all rooms and their details. Caches results to avoid repeated database queries.
 def view_rooms():
     global rooms_cache
 
@@ -75,7 +148,7 @@ def view_rooms():
         print(f"Capacity: {room[2]}")
         print("-------------------")
 
-
+# Main menu loop that prompts user for options and calls corresponding functions. Continues until user chooses to exit.
 def main():
     while True:
         print("\n--- Conference Management App ---")
