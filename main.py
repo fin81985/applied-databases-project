@@ -116,7 +116,68 @@ def view_attendees_by_company():
 
 # option 3 - prompts user for attendee details and adds them to the database.
 def add_new_attendee():
-    print("Option 3 not built yet.")
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        attendee_id = input("Enter Attendee ID: ").strip()
+        attendee_name = input("Enter Attendee Name: ").strip()
+        attendee_dob = input("Enter Attendee DOB (YYYY-MM-DD): ").strip()
+        attendee_gender = input("Enter Gender (Male/Female): ").strip()
+        company_id = input("Enter Company ID: ").strip()
+
+        # Check gender
+        if attendee_gender not in ["Male", "Female"]:
+            print("Invalid gender")
+            conn.close()
+            return
+
+        # Check duplicate attendee ID
+        cursor.execute(
+            "SELECT attendeeID FROM attendee WHERE attendeeID = %s",
+            (attendee_id,)# This sql query checks if the attendee ID already exists in the attendee table. If it does, print a message and return to the main menu.
+        )
+        if cursor.fetchone() is not None:
+            print("Attendee ID already exists")
+            conn.close()
+            return
+
+        # Check company exists
+        cursor.execute(
+            "SELECT companyID FROM company WHERE companyID = %s",
+            (company_id,)# This sql query checks if the company ID exists in the company table. If it does not, print a message and return to the main menu.
+        )
+        if cursor.fetchone() is None:
+            print("Invalid Company ID")
+            conn.close()
+            return
+
+        # This sql query inserts a new attendee into the attendee table with the provided details. If the insertion is successful, print a success message. If there is an error during insertion, print the error message.
+        query = """
+        INSERT INTO attendee (
+            attendeeID,
+            attendeeName,
+            attendeeDOB,
+            attendeeGender,
+            attendeeCompanyID
+        )
+        VALUES (%s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(query, (
+            attendee_id,
+            attendee_name,
+            attendee_dob,
+            attendee_gender,
+            company_id
+        ))
+        conn.commit()
+
+        print("Attendee successfully added")
+        conn.close()
+
+    except Exception as e:
+        print("Error:", e)
 
 # option 4 - lists attendees connected to the user (based on connections in Neo4j).
 def view_connected_attendees():
