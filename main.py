@@ -128,7 +128,7 @@ def add_new_attendee():
 
         # Check gender
         if attendee_gender not in ["Male", "Female"]:
-            print("Invalid gender")
+            print("Invalid gender input. Please enter either Male or Female.")
             conn.close()
             return
 
