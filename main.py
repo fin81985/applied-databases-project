@@ -184,7 +184,74 @@ def add_new_attendee():
 
 # option 4 - lists attendees connected to the user (based on connections in Neo4j).
 def view_connected_attendees():
-    print("Option 4 not built yet.")
+    while True:
+        attendee_input = input("Enter Attendee ID: ").strip()
+
+        if not attendee_input.isdigit():
+            print("Invalid attendee ID")
+            continue
+
+        attendee_id = int(attendee_input)
+
+        try:
+            # First check MySQL
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT attendeeName FROM attendee WHERE attendeeID = %s",
+                (attendee_id,)
+            )
+            attendee = cursor.fetchone()
+            conn.close() # This sql query checks if the attendee ID exists in the attendee table. If it does not, print a message and return to the main menu. Otherwise, store the attendee name for later use.
+
+            if attendee is None:
+                print("Attendee does not exist")
+                break
+
+            attendee_name = attendee[0]
+
+            # Then check Neo4j connections
+            driver = get_neo4j_driver()
+            with driver.session() as session:
+                result = session.run("""
+                    MATCH (a:Attendee {AttendeeID: $attendee_id})-[:CONNECTED_TO]-(b:Attendee)
+                    RETURN b.AttendeeID AS connected_id
+                    ORDER BY connected_id
+                """, attendee_id=attendee_id)
+                # This neo4j query matches the attendee node with the specified attendee ID and finds all connected attendees through the CONNECTED_TO relationship. 
+                # It returns the connected attendee IDs ordered by ID.
+
+                connected_ids = [record["connected_id"] for record in result]
+
+            driver.close()
+
+            print(f"\nAttendee: {attendee_name}")
+
+            if not connected_ids:
+                print("No connections")
+                break
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            print("\nConnected Attendees:")
+            for connected_id in connected_ids:
+                cursor.execute(
+                    "SELECT attendeeName FROM attendee WHERE attendeeID = %s",
+                    (connected_id,)
+                ) 
+                # This sql query retrieves the name of each connected attendee based on their attendee ID. 
+                # If the attendee ID does not exist, it will return "Unknown".
+                result = cursor.fetchone()
+                connected_name = result[0] if result else "Unknown"
+                print(f"{connected_id} - {connected_name}")
+
+            conn.close()
+            break
+
+        except Exception as e:
+            print("Error viewing connected attendees:", e)
+            break
 
 # option 5 - prompts user to enter the name of an attendee to connect with, then creates a connection in Neo4j.
 def add_attendee_connection():
