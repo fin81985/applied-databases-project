@@ -152,7 +152,10 @@ def add_new_attendee():
             conn.close()
             return
 
-        # This sql query inserts a new attendee into the attendee table with the provided details. If the insertion is successful, print a success message. If there is an error during insertion, print the error message.
+        # This sql query inserts a new attendee into the attendee table with the provided details. 
+        # If the insertion is successful, print a success message. 
+        # 
+        # If there is an error during insertion, print the error message.
         query = """
         INSERT INTO attendee (
             attendeeID,
