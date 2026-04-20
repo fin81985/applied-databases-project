@@ -202,7 +202,10 @@ def view_connected_attendees():
                 (attendee_id,)
             )
             attendee = cursor.fetchone()
-            conn.close() # This sql query checks if the attendee ID exists in the attendee table. If it does not, print a message and return to the main menu. Otherwise, store the attendee name for later use.
+            conn.close() 
+            # This sql query checks if the attendee ID exists in the attendee table. 
+            # If it does not, print a message and return to the main menu. 
+            # Otherwise, store the attendee name for later use.
 
             if attendee is None:
                 print("Attendee does not exist")
