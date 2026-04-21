@@ -25,19 +25,25 @@ connections (Neo4j) - View rooms
 
 ## 📁 Project Structure
 
-applied-databases-project/ │ ├── main.py \# Main application (menu +
-features) ├── db_mysql.py \# MySQL connection ├── db_neo4j.py \# Neo4j
-connection ├── config.py \# Database credentials ├── GitLink.txt \#
-GitHub repository link ├── innovation.pdf \# Description of additional
-features └── README.md \# Project documentation
+applied-databases-project/
+│
+├── main.py # Main application (menu + features)
+├── db_mysql.py # MySQL connection
+├── db_neo4j.py # Neo4j connection
+├── config.py # Database credentials
+├── GitLink.txt # GitHub repository link
+├── innovation.pdf # Innovation explanation
+└── README.md # Project documentation
 
 ------------------------------------------------------------------------
 
-## ⚙️ Setup Instructions
+##  Setup Instructions
 
 ### 1. Install Dependencies
 
-pip install mysql-connector-python neo4j
+```bash
+pip install mysql-connector-python neo4j 
+```
 
 ------------------------------------------------------------------------
 
@@ -50,7 +56,8 @@ SOURCE appdbproj.sql;
 
 3.  Confirm database exists:
 
-USE appdbproj; SHOW TABLES;
+USE appdbproj; 
+SHOW TABLES;
 
 ------------------------------------------------------------------------
 
@@ -66,18 +73,19 @@ USE appdbproj; SHOW TABLES;
 
 ### 4. Configure Credentials
 
-Edit config.py:
+MYSQL_HOST = "localhost"
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "yourpassword"
+MYSQL_DB = "appdbproj"
 
-MYSQL_HOST = "localhost" MYSQL_USER = "root" MYSQL_PASSWORD =
-"yourpassword" MYSQL_DB = "appdbproj"
-
-NEO4J_URI = "neo4j://127.0.0.1:7687" NEO4J_USER = "neo4j" NEO4J_PASSWORD
-= "yourpassword"
+NEO4J_URI = "neo4j://127.0.0.1:7687"
+NEO4J_USER = "neo4j"
+NEO4J_PASSWORD = "yourpassword"
 
 ------------------------------------------------------------------------
 
-## ▶️ Running the Application
-
+## Running the Application
+```bash
 python main.py
 
 ------------------------------------------------------------------------
@@ -125,18 +133,25 @@ python main.py
 
 ------------------------------------------------------------------------
 
-## 💡 Innovation
+##  Innovation
 
-See innovation.pdf for additional features.
+Additional functionality was implemented beyond the specification:
 
+Search Attendee by Name
+* Allows searching using full or partial names
+    * Displays:
+        * Attendee ID
+        * Name
+        * Date of birth
+
+Benefit: Improves usability by removing the need to know attendee IDs in advance.
+see `innovation.txt`.
 ------------------------------------------------------------------------
 
-## 🧪 Testing
+##  Testing
 
-Includes validation of inputs and database error handling.
+Input validation implemented across all features
+Handles invalid inputs and database errors gracefully
+Tested with both valid and edge-case scenarios
 
 ------------------------------------------------------------------------
-
-## 🔗 GitHub Repository
-
-See GitLink.txt for the repository link.
