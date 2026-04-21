@@ -258,7 +258,77 @@ def view_connected_attendees():
 
 # option 5 - prompts user to enter the name of an attendee to connect with, then creates a connection in Neo4j.
 def add_attendee_connection():
-    print("Option 5 not built yet.")
+    while True:
+        id1_input = input("Enter first Attendee ID: ").strip()
+        id2_input = input("Enter second Attendee ID: ").strip()
+
+        # Must both be numeric
+        if not id1_input.isdigit() or not id2_input.isdigit():
+            print("Invalid attendee ID")
+            continue
+
+        id1 = int(id1_input)
+        id2 = int(id2_input)
+
+        # Cannot connect attendee to themself
+        if id1 == id2:
+            print("An attendee cannot be CONNECTED_TO themself")
+            continue
+
+        try:
+            # Check both exist in MySQL
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT attendeeName FROM attendee WHERE attendeeID = %s",
+                (id1,)
+            ) # This sql query checks if the first attendee ID exists in the attendee table. 
+            #If it does not, print a message and return to the main menu. Otherwise, store the attendee name for later use.
+            attendee1 = cursor.fetchone()
+
+            cursor.execute(
+                "SELECT attendeeName FROM attendee WHERE attendeeID = %s",
+                (id2,)
+            ) # This sql query checks if the second attendee ID exists in the attendee table. 
+            # If it does not, print a message and return to the main menu. Otherwise, store the attendee name for later use.
+            attendee2 = cursor.fetchone()
+
+            conn.close()
+
+            if attendee1 is None or attendee2 is None:
+                print("One or both attendees do not exist")
+                continue
+
+            # Check existing Neo4j connection
+            driver = get_neo4j_driver()
+            with driver.session() as session:
+                existing = session.run("""
+                    MATCH (a:Attendee {AttendeeID: $id1})-[:CONNECTED_TO]-(b:Attendee {AttendeeID: $id2})
+                    RETURN a
+                """, id1=id1, id2=id2).single()# This neo4j query checks if there is already a CONNECTED_TO relationship between the two specified attendees. 
+                # If there is, print a message and return to the main menu. Otherwise, proceed to create the connection.
+
+                if existing:
+                    print("These attendees are already connected")
+                    driver.close()
+                    continue
+
+                # Make sure nodes exist, then create relationship
+                session.run("""
+                    MERGE (a:Attendee {AttendeeID: $id1})
+                    MERGE (b:Attendee {AttendeeID: $id2})
+                    MERGE (a)-[:CONNECTED_TO]-(b)
+                """, id1=id1, id2=id2)# This neo4j query uses MERGE to ensure that nodes for both attendees exist 
+                # then creates a CONNECTED_TO relationship between them.
+
+            driver.close()
+            print(f"Attendee {id1} is now CONNECTED_TO attendee {id2}")
+            break
+
+        except Exception as e:
+            print("Error adding attendee connection:", e)
+            break
 
 # option 6 - lists all rooms and their details. Caches results to avoid repeated database queries.
 def view_rooms():
@@ -268,7 +338,8 @@ def view_rooms():
         try:
             conn = get_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT roomID, roomName, capacity FROM room")
+            cursor.execute("SELECT roomID, roomName, capacity FROM room") # This sql query retrieves the room ID, room name, and capacity for all rooms in the room table. 
+            # The results are stored in the rooms_cache variable to avoid repeated database queries on subsequent calls to this function.
             rooms_cache = cursor.fetchall()
             conn.close()
         except Exception as e:
@@ -281,6 +352,7 @@ def view_rooms():
         print(f"Room Name: {room[1]}")
         print(f"Capacity: {room[2]}")
         print("-------------------")
+
 
 # Main menu loop that prompts user for options and calls corresponding functions. Continues until user chooses to exit.
 def main():
