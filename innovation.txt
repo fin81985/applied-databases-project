@@ -1,0 +1,3 @@
+I added a new menu option called “Search Attendee by Name” option 7.
+This allows the user to search attendees using all or part of a name and displays the attendee ID, name, and date of birth. 
+This improves usability by making attendee records easier to find without needing to know the attendee ID in advance.
