@@ -353,7 +353,39 @@ def view_rooms():
         print(f"Capacity: {room[2]}")
         print("-------------------")
 
+# options 7 - prompts user for attendee name (or part of name) and lists matching attendees. Uses SQL query with LIKE operator to search for attendees by name.
+def search_attendee():
+    name = input("Enter attendee name (or part of name): ").strip()
 
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        query = """
+        SELECT attendeeID, attendeeName, attendeeDOB
+        FROM attendee
+        WHERE attendeeName LIKE %s
+        ORDER BY attendeeName
+        """
+
+        cursor.execute(query, ("%" + name + "%",))
+        results = cursor.fetchall()
+
+        if results:
+            print("\n--- Matching Attendees ---")
+            for row in results:
+                print(f"ID: {row[0]}")
+                print(f"Name: {row[1]}")
+                print(f"DOB: {row[2]}")
+                print("-------------------")
+        else:
+            print("No attendees found")
+
+        conn.close()
+
+    except Exception as e:
+        print("Error searching attendees:", e)
+        
 # Main menu loop that prompts user for options and calls corresponding functions. Continues until user chooses to exit.
 def main():
     while True:
@@ -364,6 +396,7 @@ def main():
         print("4. View Connected Attendees")
         print("5. Add Attendee Connection")
         print("6. View Rooms")
+        print("7. Search Attendee by Name")
         print("x. Exit")
 
         choice = input("Enter option: ").strip().lower()
@@ -380,11 +413,11 @@ def main():
             add_attendee_connection()
         elif choice == "6":
             view_rooms()
+        elif choice == "7":
+            search_attendee()
         elif choice == "x":
             print("Goodbye.")
             break
-        else:
-            continue
 
 
 if __name__ == "__main__":
